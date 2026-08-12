@@ -442,44 +442,62 @@ function preset(lat,lon,tz,label){
 }
 
 let SAVED_CACHE=[];
+const searchParams = new URLSearchParams(window.location.search);
+const userId = searchParams.get('userId');
+const customHost = searchParams.get('host') || '';
+
+function getKundalisUrl(id = '') {
+  if (userId && customHost) {
+    return `${customHost}/api/kp_kundalis.php?user_id=${userId}` + (id ? `&id=${id}` : '');
+  }
+  return id ? `/api/kundalis/${id}` : `/api/kundalis`;
+}
+
 async function refreshSavedCache(){
   try{
-    let r=await fetch("/api/kundalis");
+    let url = getKundalisUrl();
+    let r=await fetch(url);
     let x=await r.json();
     SAVED_CACHE=x.kundalis||[];
   }catch(e){ SAVED_CACHE=[]; }
   renderSavedList();
 }
 function renderSavedList(){
-  if(!SAVED_CACHE.length){savedList.innerHTML="<p class='small'>No saved kundalis yet</p>";return;}
-  savedList.innerHTML=SAVED_CACHE.slice().reverse().map(k=>
-    "<div class='saved-item'>"+
-      "<div class='si-info' onclick='loadKundali(\""+k.id+"\")'>"+
-        "<div class='si-name'>"+(k.name||"Untitled")+"</div>"+
-        "<div class='si-meta'>"+k.date+" "+k.time+"</div>"+
-      "</div>"+
-      "<span class='si-del' onclick='event.stopPropagation();deleteKundali(\""+k.id+"\")' title='Delete'>&times;</span>"+
+  let sHtml="<option value=''>-- Load Saved Kundali --</option>";
+  if(typeof sv !== 'undefined') {
+    sHtml+=SAVED_CACHE.map(k=>`<option value='${k.id}'>${k.name} (${k.date} ${k.time})</option>`).join("");
+    sv.innerHTML=sHtml;
+  }
+  savedList.innerHTML=SAVED_CACHE.length ? SAVED_CACHE.map(k=>
+    "<div class='sv-item'><b>"+(k.name||"Untitled")+"</b><br><small>"+k.date+" "+k.time+" &middot; "+k.latitude+", "+k.longitude+"</small>"+
+    "<div class='sv-actions'><button onclick='loadKundali(\""+k.id+"\")'>Load</button><button class='danger' onclick='deleteKundali(\""+k.id+"\")'>Del</button></div>"+
     "</div>"
-  ).join("");
+  ).join("") : "<p class='small'>No saved kundalis yet</p>";
 }
-async function saveCurrentKundali(silent){
+async function saveCurrentKundali(silent, isHorary=false){
   let body={name:nm.value,date:dt.value,time:tm.value,latitude:+la.value,longitude:+lo.value,timezone:+tz.value};
+  if(isHorary && LAST_BIRTH){ body={name:LAST_BIRTH.name,date:LAST_BIRTH.date,time:LAST_BIRTH.time,latitude:LAST_BIRTH.latitude,longitude:LAST_BIRTH.longitude,timezone:LAST_BIRTH.timezone}; }
+  let url = getKundalisUrl();
   try{
-    let r=await fetch("/api/kundalis",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    let r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
     if(!r.ok)throw Error("save failed");
     await refreshSavedCache();
     if(!silent) setStatus("ok","Kundali saved");
-  }catch(e){ if(!silent) setStatus("err","Could not save kundali"); }
+  }catch(e){
+    if(!silent) setStatus("err","Save failed: "+e.message);
+  }
 }
 function loadKundali(id){
-  const k=SAVED_CACHE.find(x=>x.id===id);
-  if(!k)return;
-  nm.value=k.name||"";dt.value=k.date;tm.value=k.time;la.value=k.latitude;lo.value=k.longitude;tz.value=k.timezone;
+  let k=SAVED_CACHE.find(x=>x.id===id); if(!k)return;
+  nm.value=k.name;dt.value=k.date;tm.value=k.time;la.value=k.latitude;lo.value=k.longitude;tz.value=k.timezone;
+  if(typeof sv !== 'undefined') sv.value="";
   go();
 }
 async function deleteKundali(id){
+  if(!confirm("Kundali delete karna hai?"))return;
   try{
-    await fetch("/api/kundalis/"+id,{method:"DELETE"});
+    let url = getKundalisUrl(id);
+    await fetch(url,{method:"DELETE"});
     await refreshSavedCache();
   }catch(e){}
 }
