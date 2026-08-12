@@ -1,0 +1,1245 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Kp Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbf7ec; --card:#ffffff; --card2:#fdf3dc;
+  --gold:#b8863f; --gold-bright:#8a6114; --ivory:#2b2410; --muted:#8a7f66; --muted-dim:#a89c7e;
+  --pos:#3f8a5f; --neg:#b1573a; --border:rgba(184,134,63,0.35); --border-soft:rgba(184,134,63,0.18);
+  --font-display:'Cormorant Garamond',serif; --font-body:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius:14px; --shadow:0 10px 26px -16px rgba(120,95,40,.28);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body); background:var(--bg); margin:0; color:var(--ivory); min-height:100vh;
+}
+::selection{background:rgba(184,134,63,.35);color:var(--ivory)}
+::-webkit-scrollbar{height:10px;width:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(184,134,63,.35);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:rgba(184,134,63,.55)}
+
+.layout{max-width:1440px;margin:auto;padding:22px 22px 70px;display:grid;grid-template-columns:308px 1fr;gap:20px;align-items:start}
+
+/* ---------- Sidebar ---------- */
+.sidebar{position:sticky;top:22px;display:flex;flex-direction:column;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 2px 2px}
+.brand h1{font-family:var(--font-display);font-weight:600;font-size:24px;margin:0;color:var(--ivory);letter-spacing:.2px;line-height:1.1}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase}
+
+.c{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;display:flex;align-items:center;gap:5px;margin-bottom:6px;font-weight:600}
+input{width:100%;box-sizing:border-box;padding:10px 12px;background:#fffdf7;border:1px solid var(--border);border-radius:9px;color:var(--ivory);font-family:var(--font-mono);font-size:13px;transition:border-color .15s, box-shadow .15s}
+input:hover{border-color:rgba(184,134,63,.55)}
+input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,134,63,.18)}
+input:invalid{border-color:rgba(177,87,58,.5)}
+button{padding:11px 20px;background:linear-gradient(135deg,var(--gold),#8a6114);color:#fffaf0;border:0;border-radius:9px;cursor:pointer;font-weight:700;font-family:var(--font-body);font-size:13px;letter-spacing:.3px;transition:filter .15s, transform .1s}
+button:hover{filter:brightness(1.08)}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.6;cursor:not-allowed;filter:none}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
+.btn-primary{width:100%;padding:13px 20px;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:9px}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold-bright);filter:none}
+
+.spinner{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,250,240,.4);border-top-color:#fffaf0;animation:spin .7s linear infinite;display:none}
+.spinner.on{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.status-line{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:12px;min-height:16px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--muted-dim);flex:0 0 auto}
+.status-line.ok .status-dot{background:var(--pos)}
+.status-line.err .status-dot{background:var(--neg)}
+.status-line.err{color:var(--neg)}
+.status-line.busy .status-dot{background:var(--gold);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.chip{font-size:10.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);background:transparent;cursor:pointer;font-weight:500;letter-spacing:.2px}
+.chip:hover{border-color:var(--gold);color:var(--gold-bright);filter:none}
+.chip.on{background:linear-gradient(135deg,var(--gold),#a9824f);color:#fffaf0;border-color:transparent;font-weight:700}
+.chip.on:hover{color:#fffaf0}
+
+.place-wrap{position:relative}
+.place-hint{font-size:10px;color:var(--muted-dim);margin:4px 0 0}
+.place-dropdown{position:absolute;z-index:30;top:calc(100% + 4px);left:0;right:0;background:#ffffff;border:1px solid var(--border);border-radius:10px;max-height:260px;overflow-y:auto;box-shadow:var(--shadow)}
+.place-item{padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,.05)}
+.place-item:last-child{border-bottom:0}
+.place-item:hover{background:rgba(184,134,63,.12)}
+.place-name{font-size:12px;color:var(--ivory);font-weight:600}
+.place-sub{font-size:10.5px;color:var(--muted);margin-top:2px}
+.place-msg{padding:10px 12px;font-size:11px;color:var(--muted)}
+.place-selected{font-size:10.5px;color:var(--pos);margin-top:7px;line-height:1.5}
+.place-selected b{color:var(--ivory)}
+.place-selected.err{color:var(--neg)}
+
+.coord-details{margin:10px 0 4px}
+.coord-details summary{cursor:pointer;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px;padding:6px 0}
+.coord-details summary::-webkit-details-marker{display:none}
+.coord-details summary::before{content:'\25b8';font-size:10px;display:inline-block;transition:transform .15s}
+.coord-details[open] summary::before{transform:rotate(90deg)}
+.coord-details summary:hover{color:var(--gold-bright)}
+
+.saved-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.saved-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid var(--border-soft);border-radius:8px;cursor:pointer}
+.saved-item:hover{border-color:var(--gold);background:rgba(184,134,63,.08)}
+.si-info{flex:1;min-width:0}
+.si-name{font-weight:600;color:var(--ivory);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si-meta{font-size:10.5px;color:var(--muted)}
+.si-del{color:var(--neg);font-weight:700;padding:2px 7px;border-radius:5px;flex:0 0 auto;font-size:14px;line-height:1}
+.si-del:hover{background:rgba(177,87,58,.15)}
+
+/* ---------- Main ---------- */
+main{min-width:0}
+.tabbar-wrap{position:sticky;top:22px;z-index:5;margin-bottom:16px}
+.tabs{display:flex;flex-wrap:nowrap;gap:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:999px;padding:5px;overflow-x:auto;box-shadow:var(--shadow)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{background:transparent;color:var(--muted);padding:9px 17px;border:0;border-radius:999px;font-size:12.5px;white-space:nowrap;flex:0 0 auto;font-weight:600;letter-spacing:.2px}
+.tabs button:hover{color:var(--ivory)}
+.tabs .on{background:linear-gradient(135deg,var(--gold),#a9824f);color:#fffaf0}
+.tabs .on:hover{color:#fffaf0}
+
+.pane{animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+h2{font-family:var(--font-display);font-weight:600;color:var(--gold-bright);font-size:23px;margin:0 0 14px;border-bottom:1px solid var(--border);padding-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+h3{font-family:var(--font-display);font-weight:600;color:var(--ivory);font-size:18px;margin:20px 0 8px}
+h3:first-child{margin-top:0}
+h4{font-family:var(--font-display);font-weight:600;color:var(--gold-bright);font-size:17px;margin:2px 0 8px}
+.subtle{color:var(--muted);font-size:12px;margin:-6px 0 14px}
+
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border-soft)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono);min-width:520px}
+th{position:sticky;top:0;background:#f4e8c9;padding:10px 10px;border-bottom:1px solid var(--border);text-align:left;color:var(--gold-bright);font-family:var(--font-body);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid rgba(0,0,0,.06);color:var(--ivory);white-space:nowrap}
+tbody tr:nth-child(odd) td{background:rgba(184,134,63,.045)}
+tr:hover td{background:rgba(184,134,63,.12)!important}
+.hide{display:none!important}
+.hit-plus{color:var(--pos);font-weight:700}
+.hit-minus{color:var(--neg);font-weight:700}
+.col-hl{color:#1f5fa8!important;font-weight:700}
+.badge{display:inline-block;background:rgba(184,134,63,.16);color:var(--gold-bright);border:1px solid var(--border);border-radius:6px;padding:2px 8px;margin:2px;font-size:11px;font-family:var(--font-mono)}
+.dcard{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;background:rgba(184,134,63,.03);transition:border-color .15s}
+.dcard:hover{border-color:rgba(184,134,63,.55)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.now{background:rgba(184,134,63,.16)!important}
+.now td:first-child{border-left:3px solid var(--gold)}
+.small{font-size:11.5px;color:var(--muted);font-family:var(--font-body)}
+pre{background:#fbf3de;border:1px solid var(--border);border-radius:10px;padding:16px;overflow:auto;font-family:var(--font-mono);font-size:11.5px;color:#3a2f18;max-height:70vh}
+.chart-card{border:1px solid var(--border);border-radius:12px;padding:16px;background:rgba(184,134,63,.03);text-align:center}
+.chart-card h3{margin-top:0}
+.chart-legend{font-size:11px;color:var(--muted);margin-top:8px}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:70px 20px;gap:10px}
+.empty h2{border:0;padding:0}
+.empty p{color:var(--muted);max-width:380px;font-size:13px;margin:0}
+.mini-form{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px}
+.mini-form .field{margin-bottom:0;min-width:150px;flex:1}
+.copy-btn{font-size:11px;padding:6px 12px;border-radius:7px}
+.foot{text-align:center;color:var(--muted);font-size:11px;margin-top:28px;letter-spacing:.3px}
+
+.hit-filter{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}
+.hit-select{width:100%;padding:9px 12px;background:#fffdf7;border:1px solid var(--border);border-radius:9px;color:var(--ivory);font-family:var(--font-mono);font-size:12.5px;cursor:pointer}
+.hit-select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,134,63,.18)}
+
+.dasha-cascade{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:12px;margin-top:10px}
+.dcol{border:1px solid var(--border-soft);border-radius:10px;padding:10px;background:rgba(184,134,63,.025);overflow-x:auto;min-width:0}
+.dcol h4{margin:0 0 8px;font-size:14.5px}
+.mtable{width:100%;border-collapse:collapse;font-size:10.5px;font-family:var(--font-mono);min-width:150px}
+.mtable th{position:static;background:var(--card2);padding:5px 6px;border-bottom:1px solid var(--border);text-align:left;color:var(--gold-bright);font-family:var(--font-body);font-weight:700;font-size:8.5px;text-transform:uppercase;white-space:nowrap}
+.mtable td{padding:5px 6px;border-bottom:1px solid rgba(0,0,0,.06);color:var(--ivory);white-space:nowrap}
+.mtable tr.now{background:rgba(184,134,63,.2)!important}
+
+.dseq-wrap{margin-bottom:22px}
+.dseq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:10px 0 18px}
+.dseq-card{border:2px solid var(--border);border-radius:12px;padding:16px;background:#fff}
+.dseq-card.md{border-color:var(--gold)}
+.dseq-card.ad{border-color:#1f5fa8}
+.dseq-card.pd{border-color:#7c5cbf}
+.dseq-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dseq-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;flex:0 0 auto}
+.dseq-title{font-weight:700;font-size:14px;color:var(--ivory)}
+.dseq-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05);font-size:12px}
+.dseq-row:last-of-type{border-bottom:0}
+.dseq-row .lbl{color:var(--muted);min-width:80px}
+.dseq-row .val{font-weight:700;color:var(--ivory)}
+.dseq-combined{margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft)}
+.badge-green{background:rgba(63,138,95,.16);color:#2d6b47;border-color:rgba(63,138,95,.35)}
+.badge-fruit{background:rgba(201,138,43,.18);color:#8a5f14;border-color:rgba(201,138,43,.45);font-weight:700}
+.dur-badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.dur-chip{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1px solid var(--border-soft);background:rgba(184,134,63,.04);font-size:12px;color:var(--ivory)}
+.dur-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+
+.gem-steps .dcard{margin-bottom:10px}
+.gem-check{font-weight:700;display:inline-block;width:16px}
+.gem-check.ok{color:var(--pos)}
+.gem-check.bad{color:var(--neg)}
+.gem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:10px 0 20px}
+.gem-card{border:1px solid var(--border);border-radius:12px;padding:16px;background:rgba(63,138,95,.07)}
+.gem-card.excluded{background:rgba(177,87,58,.07)}
+.gem-card h4{margin:0 0 4px}
+.gem-row{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.06)}
+.gem-row:last-of-type{border-bottom:0}
+.gem-row b{color:var(--ivory);text-align:right}
+.gem-why{margin-top:8px;font-size:11px;color:var(--muted);background:rgba(184,134,63,.1);padding:7px 9px;border-radius:7px}
+.gem-howto{margin:6px 0 20px;padding-left:20px}
+.gem-howto li{margin-bottom:7px;font-size:12.5px}
+.gem-disclaimer{font-size:11px;color:var(--muted);margin-top:6px;padding:10px 12px;border:1px dashed var(--border);border-radius:8px}
+
+.pred-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:12px 0 20px}
+.pred-card{border:2px solid var(--border);border-radius:12px;padding:16px;background:#fff}
+.pred-card.fav{border-color:var(--pos)}
+.pred-card.mix{border-color:#c98a2b}
+.pred-card.chg{border-color:var(--neg)}
+.pred-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.pred-title{font-weight:700;font-size:14px;color:var(--ivory)}
+.pred-range{font-size:10.5px;color:var(--muted);margin-bottom:10px}
+.pred-sentiment{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.3px;text-transform:uppercase;flex:0 0 auto}
+.pred-sentiment.fav{background:rgba(63,138,95,.15);color:#2d6b47}
+.pred-sentiment.mix{background:rgba(201,138,43,.15);color:#8a5f14}
+.pred-sentiment.chg{background:rgba(177,87,58,.15);color:#8a3a20}
+.pred-theme{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.05);font-size:12px;line-height:1.5}
+.pred-theme:last-of-type{border-bottom:0}
+.pred-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;margin-top:5px}
+.pred-dot.supportive{background:var(--pos)}
+.pred-dot.mixed{background:#c98a2b}
+.pred-dot.testing{background:var(--neg)}
+.pred-theme b{color:var(--ivory)}
+.pred-summary{margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);font-size:12px;color:var(--muted);font-style:italic}
+.pred-disclaimer{font-size:11px;color:var(--muted);margin-top:6px;padding:10px 12px;border:1px dashed var(--border);border-radius:8px}
+
+.wheel-display{font-family:var(--font-mono);font-size:40px;font-weight:700;color:var(--gold-bright);text-align:center;padding:22px 10px;background:#fffdf7;border:2px solid var(--border);border-radius:12px;margin-bottom:12px;letter-spacing:2px;max-width:260px}
+
+.ref-highlight td{background:rgba(184,134,63,.22)!important;font-weight:700}
+.ref-highlight td:first-child{border-left:3px solid var(--gold)}
+.main-naks-card{border:2px solid var(--gold);border-radius:12px;padding:16px;background:rgba(184,134,63,.06);margin-bottom:18px}
+.main-naks-card h4{margin:0 0 8px}
+
+.setup-wrap{max-width:600px;margin:36px auto;display:flex;flex-direction:column;gap:16px;padding:0 16px}
+.mode-toggle{display:flex;gap:5px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:999px;padding:5px;box-shadow:var(--shadow)}
+.mode-toggle button{flex:1;background:transparent;color:var(--muted);padding:11px;border:0;border-radius:999px;font-weight:700;font-family:var(--font-body);font-size:13.5px;cursor:pointer}
+.mode-toggle button.on{background:linear-gradient(135deg,var(--gold),#a9824f);color:#fffaf0}
+.dash-header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.dash-header .dash-summary{font-size:12.5px;color:var(--muted)}
+.dash-header .dash-summary b{color:var(--ivory)}
+#pageDashboard main{min-width:0}
+
+@media(max-width:1300px){
+  .dasha-cascade{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr;padding:16px 14px 50px}
+  .sidebar{position:static}
+  .grid2{grid-template-columns:1fr}
+  .tabbar-wrap{top:0}
+  .brand h1{font-size:22px}
+  .dasha-cascade{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:700px){
+  .dasha-cascade{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:420px){
+  .dasha-cascade{grid-template-columns:1fr}
+}
+@media print{
+  body *{visibility:hidden}
+  #fr,#fr *{visibility:visible}
+  #fr{display:block!important;position:absolute;left:0;top:0;width:100%;visibility:visible;box-shadow:none;border:0}
+  .fr-noprint{display:none!important}
+}
+</style></head><body>
+
+<div id="pageSetup">
+<div class="setup-wrap">
+  <div class="brand" style="justify-content:center;text-align:center">
+    <svg width="40" height="40" viewBox="0 0 100 100" style="flex:0 0 auto">
+      <circle cx="50" cy="50" r="47" fill="none" stroke="#b8863f" stroke-width=".7" opacity=".6"/>
+      <circle cx="50" cy="50" r="33" fill="none" stroke="#b8863f" stroke-width=".7" opacity=".7"/>
+      <g stroke="#8a6114" stroke-width=".8" opacity=".85">
+        <circle cx="50" cy="20" r="16" fill="none"/><circle cx="76.6" cy="35" r="16" fill="none"/>
+        <circle cx="76.6" cy="65" r="16" fill="none"/><circle cx="50" cy="80" r="16" fill="none"/>
+        <circle cx="23.4" cy="65" r="16" fill="none"/><circle cx="23.4" cy="35" r="16" fill="none"/>
+        <circle cx="50" cy="50" r="16" fill="none"/>
+      </g>
+    </svg>
+    <div style="flex:1;text-align:left"><h1>Kp Tool</h1><p><span style="color:var(--gold);font-family:var(--font-mono);text-transform:none;letter-spacing:0">3.5</span></p></div>
+  </div>
+
+  <div class="mode-toggle">
+    <button type="button" class="on" id="modeBirthBtn" onclick="setPageMode('birth')">Birth Chart</button>
+    <button type="button" id="modeHoraryBtn" onclick="setPageMode('horary')">Horary</button>
+  </div>
+
+  <div id="setupBirth">
+    <div class="c">
+      <div class="field"><label>Name</label><input id="nm" value="" placeholder="Name"></div>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input id="dt" type="date" value=""></div>
+        <div class="field"><label>Time</label><input id="tm" type="time" step="1" value=""></div>
+      </div>
+      <div class="field place-wrap" id="placeWrap">
+        <label>Search place</label>
+        <input id="placeSearch" placeholder="New Delhi" autocomplete="off">
+        <div class="place-dropdown hide" id="placeDropdown"></div>
+        <p class="place-hint">Type a city, district or tehsil name &middot; needs internet</p>
+        <div class="place-selected hide" id="placeSelected"></div>
+      </div>
+      <details class="coord-details">
+        <summary>Latitude / Longitude / UTC offset</summary>
+        <div class="field-row" style="margin-top:10px">
+          <div class="field"><label>Latitude</label><input id="la" value=""></div>
+          <div class="field"><label>Longitude</label><input id="lo" value=""></div>
+        </div>
+        <div class="field"><label>UTC Offset</label><input id="tz" value="5.5"></div>
+      </details>
+      <div class="field presets">
+        <button type="button" class="chip" onclick="preset(28.6139,77.2090,5.5,'New Delhi, Delhi, India')">New Delhi, IN</button>
+        <button type="button" class="chip" onclick="preset(19.0760,72.8777,5.5,'Mumbai, Maharashtra, India')">Mumbai, IN</button>
+        <button type="button" class="chip" onclick="preset(27.0264,70.7775,5.5,'Jaisalmer, Rajasthan, India')">Jaisalmer, IN</button>
+      </div>
+      <div class="field" style="margin-top:16px">
+        <button class="btn-primary" onclick="go()" id="calcBtn"><span class="spinner" id="spin"></span><span id="calcLbl">Calculate Chart</span></button>
+      </div>
+      <div class="status-line" id="stWrap"><span class="status-dot"></span><span id="st">Enter birth details and calculate</span></div>
+    </div>
+
+    <div class="c" id="savedCard" style="margin-top:16px">
+      <label style="margin-bottom:8px">Saved Kundalis</label>
+      <button type="button" class="btn-ghost" style="width:100%;margin-bottom:10px" onclick="saveCurrentKundali()">Save this Kundali</button>
+      <div id="savedList" class="saved-list"><p class="small">No saved kundalis yet</p></div>
+    </div>
+  </div>
+
+  <div id="setupHorary" class="hide">
+    <div class="c">
+      <h3 style="margin-top:0">1. Date &amp; Time (sawaal ka waqt)</h3>
+      <div class="presets" style="margin-bottom:10px">
+        <button type="button" class="chip on" id="hoDtCurrentBtn" onclick="setHoDtMode('current')">Abhi (Current)</button>
+        <button type="button" class="chip" id="hoDtManualBtn" onclick="setHoDtMode('manual')">Manual</button>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input id="hoDate" type="date" readonly></div>
+        <div class="field"><label>Time</label><input id="hoTime" type="time" step="1" readonly></div>
+      </div>
+      <p class="small" id="hoDtHint">Current date/time auto-filled &mdash; "Generate" dabate hi fresh time le liya jayega.</p>
+
+      <h3>2. Location</h3>
+      <div class="presets" style="margin-bottom:10px">
+        <button type="button" class="chip on" id="hoLocGpsBtn" onclick="setHoLocMode('gps')">Meri Location (GPS)</button>
+        <button type="button" class="chip" id="hoLocManualBtn" onclick="setHoLocMode('manual')">Manual</button>
+      </div>
+      <div id="hoLocGps">
+        <button type="button" class="btn-ghost" onclick="fetchHoLocation()">Use My Current Location</button>
+        <p class="small" id="hoLocStatus">Location abhi tak nahi li gayi.</p>
+      </div>
+      <div id="hoLocManual" class="hide">
+        <div class="field place-wrap" id="hoPlaceWrap">
+          <label>Search place</label>
+          <input id="hoPlaceSearch" placeholder="City name" autocomplete="off">
+          <div class="place-dropdown hide" id="hoPlaceDropdown"></div>
+        </div>
+        <div class="field-row" style="margin-top:8px">
+          <div class="field"><label>Latitude</label><input id="hoLa" value=""></div>
+          <div class="field"><label>Longitude</label><input id="hoLo" value=""></div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;max-width:160px"><label>UTC Offset</label><input id="hoTz" value="5.5"></div>
+
+      <h3>3. Number (1&ndash;249)</h3>
+      <div class="presets" style="margin-bottom:10px">
+        <button type="button" class="chip on" id="hoNumUniverseBtn" onclick="setHoNumMode('universe')">Universe Number (Random)</button>
+        <button type="button" class="chip" id="hoNumManualBtn" onclick="setHoNumMode('manual')">Manual</button>
+      </div>
+      <div id="hoNumUniverse">
+        <div class="wheel-display" id="hoWheelDisplay">--</div>
+        <button type="button" class="btn-ghost" onclick="spinHoraryWheel()">Spin the Wheel</button>
+        <p class="small" id="hoUniverseLabel"></p>
+      </div>
+      <div id="hoNumManual" class="hide">
+        <div class="field" style="max-width:160px"><label>Your Number</label><input id="hoManualNum" type="number" min="1" max="249" placeholder="1-249"></div>
+      </div>
+
+      <div class="field" style="margin-top:18px">
+        <button class="btn-primary" onclick="generateHorary()" id="hoGoBtn"><span class="spinner" id="hoSpin"></span><span id="hoGoLbl">Generate Horary Chart</span></button>
+      </div>
+      <div class="status-line" id="hoStWrap"><span class="status-dot"></span><span id="hoSt">Details bharo aur number chuno</span></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div id="pageDashboard" class="layout hide">
+<main style="grid-column:1/-1">
+  <div class="dash-header">
+    <button type="button" class="btn-ghost" onclick="backToSetup()">&larr; New Calculation</button>
+    <div class="dash-summary" id="dashSummary"></div>
+  </div>
+  <div class="tabbar-wrap">
+    <div class="c tabs" id="tabbar">
+      <button class="on" onclick="tab('ch',this)">Charts</button>
+      <button onclick="tab('p',this)">Planets</button>
+      <button onclick="tab('c',this)">KP Cusps</button>
+      <button onclick="tab('sq',this)">Sequence</button>
+      <button onclick="tab('as',this)">Aspects</button>
+      <button onclick="tab('da',this)">Dasha</button>
+      <button onclick="tab('pa',this)">Panchang</button>
+      <button onclick="tab('gm',this)">Gemstones</button>
+      <button onclick="tab('rp',this)">Ruling Planets</button>
+      <button onclick="tab('tr',this)">Transit</button>
+      <button onclick="tab('d',this)">Debug JSON</button>
+    </div>
+  </div>
+
+  <div id="res">
+    <div class="c pane" id="ch"></div>
+    <div class="c pane hide" id="p"></div>
+    <div class="c pane hide" id="c"></div>
+    <div class="c pane hide" id="sq"></div>
+    <div class="c pane hide" id="as"></div>
+    <div class="c pane hide" id="da"></div>
+    <div class="c pane hide" id="pa"></div>
+    <div class="c pane hide" id="gm"></div>
+    <div class="c pane hide" id="rp"></div>
+    <div class="c pane hide" id="tr"></div>
+    <div class="c pane hide" id="d"></div>
+  </div>
+
+  <div class="foot">KP Local Testing Tool &middot; runs entirely on your machine &middot; no data leaves localhost</div>
+</main>
+</div>
+
+<script>
+let LAST=null,LAST_BIRTH=null;
+const csFull=["dms","sign","nakshatra","pada","sign_lord","star_lord","sub_lord","sub_sub_lord"];
+function tbl(rows,key,cols,extraCols,hlCol){
+  extraCols=extraCols||[];
+  let allCols=cols.concat(extraCols.map(e=>e[0]));
+  let h="<div class='table-wrap'><table><thead><tr><th>"+key+"</th>"+allCols.map(x=>"<th>"+x.replaceAll("_"," ")+"</th>"
+  ).join("")+"</tr></thead><tbody>";
+  for(const [n,r] of rows){
+    h+="<tr><td><b>"+n+"</b></td>"+cols.map(x=>"<td"+(x===hlCol?" class='col-hl'":"")+">"+r[x]+"</td>").join("");
+    for(const [key2,fn] of extraCols) h+="<td>"+fn(r)+"</td>";
+    h+="</tr>";
+  }
+  return h+"</tbody></table></div>";
+}
+function badges(arr,cls){cls=cls?(" "+cls):"";return (arr||[]).map(h=>'<span class="badge'+cls+'">'+h+'</span>').join('')}
+const PLANET_COLORS={Sun:"#d99a2b",Moon:"#8b93a6",Mars:"#c0503a",Mercury:"#3f8a5f",Jupiter:"#b8863f",Venus:"#c15b8a",Saturn:"#5c6470",Rahu:"#4a5fb0",Ketu:"#7c5cbf"};
+
+function preset(lat,lon,tz,label){
+  la.value=lat;lo.value=lon;tz.value=tz;
+  if(label){
+    placeSearch.value=label;
+    placeSelected.classList.remove("hide");
+    placeSelected.classList.remove("err");
+    placeSelected.innerHTML="Selected: <b>"+label+"</b> &middot; "+(+lat).toFixed(4)+", "+(+lon).toFixed(4);
+  }
+}
+
+let SAVED_CACHE=[];
+async function refreshSavedCache(){
+  try{
+    let r=await fetch("/api/kundalis");
+    let x=await r.json();
+    SAVED_CACHE=x.kundalis||[];
+  }catch(e){ SAVED_CACHE=[]; }
+  renderSavedList();
+}
+function renderSavedList(){
+  if(!SAVED_CACHE.length){savedList.innerHTML="<p class='small'>No saved kundalis yet</p>";return;}
+  savedList.innerHTML=SAVED_CACHE.slice().reverse().map(k=>
+    "<div class='saved-item'>"+
+      "<div class='si-info' onclick='loadKundali(\""+k.id+"\")'>"+
+        "<div class='si-name'>"+(k.name||"Untitled")+"</div>"+
+        "<div class='si-meta'>"+k.date+" "+k.time+"</div>"+
+      "</div>"+
+      "<span class='si-del' onclick='event.stopPropagation();deleteKundali(\""+k.id+"\")' title='Delete'>&times;</span>"+
+    "</div>"
+  ).join("");
+}
+async function saveCurrentKundali(silent){
+  let body={name:nm.value,date:dt.value,time:tm.value,latitude:+la.value,longitude:+lo.value,timezone:+tz.value};
+  try{
+    let r=await fetch("/api/kundalis",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    if(!r.ok)throw Error("save failed");
+    await refreshSavedCache();
+    if(!silent) setStatus("ok","Kundali saved");
+  }catch(e){ if(!silent) setStatus("err","Could not save kundali"); }
+}
+function loadKundali(id){
+  const k=SAVED_CACHE.find(x=>x.id===id);
+  if(!k)return;
+  nm.value=k.name||"";dt.value=k.date;tm.value=k.time;la.value=k.latitude;lo.value=k.longitude;tz.value=k.timezone;
+  go();
+}
+async function deleteKundali(id){
+  try{
+    await fetch("/api/kundalis/"+id,{method:"DELETE"});
+    await refreshSavedCache();
+  }catch(e){}
+}
+
+let placeDebounce=null,placeResults=[];
+function onPlaceInput(){
+  clearTimeout(placeDebounce);
+  const q=placeSearch.value.trim();
+  if(q.length<2){placeDropdown.classList.add("hide");placeDropdown.innerHTML="";return;}
+  placeDebounce=setTimeout(()=>doPlaceSearch(q),400);
+}
+async function doPlaceSearch(q){
+  placeDropdown.classList.remove("hide");
+  placeDropdown.innerHTML="<div class='place-msg'>Searching…</div>";
+  try{
+    let r=await fetch("/api/geocode?q="+encodeURIComponent(q));
+    let x=await r.json();
+    if(!r.ok)throw Error(x.detail||"search failed");
+    placeResults=x.results||[];
+    if(!placeResults.length){placeDropdown.innerHTML="<div class='place-msg'>No matches found</div>";return;}
+    placeDropdown.innerHTML=placeResults.map((p,i)=>
+      "<div class='place-item' data-i='"+i+"'><div class='place-name'>"+p.name+"</div><div class='place-sub'>"+(p.sub_label||"")+"</div></div>"
+    ).join("");
+    placeDropdown.querySelectorAll(".place-item").forEach(el=>el.addEventListener("click",()=>selectPlace(+el.dataset.i)));
+  }catch(e){
+    placeDropdown.innerHTML="<div class='place-msg'>"+e.message+"</div>";
+  }
+}
+function selectPlace(i){
+  const p=placeResults[i];
+  la.value=p.latitude.toFixed(6);
+  lo.value=p.longitude.toFixed(6);
+  placeSearch.value=p.name;
+  placeDropdown.classList.add("hide");
+  placeSelected.classList.remove("hide");
+  placeSelected.classList.remove("err");
+  placeSelected.innerHTML="Selected: <b>"+p.name+"</b>"+(p.sub_label?(", "+p.sub_label):"")+" &middot; "+p.latitude.toFixed(4)+", "+p.longitude.toFixed(4);
+}
+document.addEventListener("click",e=>{
+  if(placeWrap && !placeWrap.contains(e.target)) placeDropdown.classList.add("hide");
+});
+placeSearch.addEventListener("input",onPlaceInput);
+placeSearch.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    e.preventDefault();
+    if(placeResults.length) selectPlace(0);
+  }
+});
+
+const ABBR={Sun:"Su",Moon:"Mo",Mars:"Ma",Mercury:"Me",Jupiter:"Ju",Venus:"Ve",Saturn:"Sa",Rahu:"Ra",Ketu:"Ke"};
+// Standard North Indian chart: House1=top diamond, then clockwise
+const CELL_POS=[
+ [150,55],[85,42],[45,80],[58,150],[45,220],[85,258],
+ [150,245],[215,258],[255,220],[242,150],[255,80],[215,42]
+];
+const NUM_POS=[
+ [150,20],[95,20],[20,95],[20,150],[20,205],[95,280],
+ [150,280],[205,280],[280,205],[280,150],[280,95],[205,20]
+];
+function chartSVG(title,ascSignIdx,planets,houseKey){
+ let byHouse={};for(let h=1;h<=12;h++)byHouse[h]=[];
+ for(const [name,pl] of Object.entries(planets)) byHouse[pl[houseKey]].push(ABBR[name]);
+ let svg='<svg viewBox="0 0 300 300" width="100%" style="max-width:360px">'+
+  '<rect x="2" y="2" width="296" height="296" fill="#fffaf0" stroke="#b8863f" stroke-width="2" rx="10"/>'+
+  '<polygon points="0,0 300,0 300,300 0,300" fill="none" stroke="#c7a874" stroke-width="1"/>'+
+  '<line x1="0" y1="0" x2="300" y2="300" stroke="#c7a874" stroke-width="1"/>'+
+  '<line x1="300" y1="0" x2="0" y2="300" stroke="#c7a874" stroke-width="1"/>'+
+  '<polygon points="150,0 300,150 150,300 0,150" fill="none" stroke="#c7a874" stroke-width="1"/>';
+ for(let h=1;h<=12;h++){
+  let signNum=((ascSignIdx+h-1)%12)+1;
+  let [nx,ny]=NUM_POS[h-1];
+  svg+='<text x="'+nx+'" y="'+ny+'" font-size="10" fill="#8a6114" text-anchor="middle" font-family="JetBrains Mono, monospace">'+signNum+'</text>';
+  let [cx,cy]=CELL_POS[h-1];
+  let planetsStr=byHouse[h].join(' ');
+  svg+='<text x="'+cx+'" y="'+cy+'" font-size="13" font-weight="600" fill="#2b2410" text-anchor="middle" font-family="Inter, sans-serif">'+planetsStr+'</text>';
+ }
+ svg+='</svg>';
+ return '<div class="chart-card"><h3>'+title+'</h3>'+svg+'</div>';
+}
+function renderCharts(x){
+ let ascSignIdx=Math.floor(x.ascendant.longitude/30);
+ ch.innerHTML='<h2>Charts</h2><div class="grid2">'+
+  chartSVG('Lagna Kundli (D1)',ascSignIdx,x.planets,'house_d1')+
+  chartSVG('KP Chart',ascSignIdx,x.planets,'house_kp')+
+  '</div><p class="chart-legend">Numbers in each cell = zodiac sign (1=Aries&hellip;12=Pisces). D1 uses whole-sign houses from Ascendant; KP Chart uses Placidus cusp-based houses.</p>';
+}
+
+let REF_CACHE=null;
+async function fetchRefCache(){
+  if(!REF_CACHE){
+    let r=await fetch("/api/reference");
+    if(!r.ok)throw Error("reference fetch failed");
+    REF_CACHE=await r.json();
+  }
+  return REF_CACHE;
+}
+function renderReferenceBlock(x,ref){
+  let moon=x&&x.planets&&x.planets.Moon;
+  let mainNak=moon?moon.nakshatra:null, mainPada=moon?moon.pada:null, mainSign=moon?moon.sign:null;
+  let mainRow=ref.nakshatras.find(n=>n.nakshatra===mainNak);
+  let prevRow=mainRow?ref.nakshatras[(mainRow.number-2+27)%27]:null;
+
+  let mainCard="";
+  if(mainRow){
+    mainCard="<div class='main-naks-card'><h4>मुख्य नक्षत्र (Main Nakshatra &middot; चंद्रमा)</h4>"+
+      "<b>"+mainRow.nakshatra_hi+"</b> ("+mainRow.nakshatra+") &middot; #"+mainRow.number+" / 27 &middot; स्वामी "+mainRow.lord+
+      " &middot; पद "+(mainPada||"?")+" ("+mainRow.pada_syllables_hi[(mainPada||1)-1]+" / "+mainRow.pada_syllables[(mainPada||1)-1]+")"+
+      "</div>";
+    if(prevRow){
+      mainCard+="<div class='main-naks-card'><h4>पिछला नक्षत्र (Previous Nakshatra)</h4>"+
+        "<b>"+prevRow.nakshatra_hi+"</b> ("+prevRow.nakshatra+") &middot; #"+prevRow.number+" / 27 &middot; स्वामी "+prevRow.lord+
+        "</div>";
+    }
+  }
+
+  let zTbl="<div class='table-wrap'><table><thead><tr><th>राशि</th><th>Range</th><th>स्वामी</th><th>नाम अक्षर</th></tr></thead><tbody>"+
+    ref.signs.map(s=>"<tr"+(s.sign===mainSign?" class='ref-highlight'":"")+"><td><b>"+s.sign_hi+"</b> ("+s.sign+")</td><td>"+s.from_deg+"&deg;&ndash;"+s.to_deg+"&deg;</td><td>"+s.lord+"</td><td>"+s.naam_akshar_hi.join(", ")+"</td></tr>").join("")+
+    "</tbody></table></div>";
+
+  let nTbl="<div class='table-wrap'><table><thead><tr><th>#</th><th>नक्षत्र</th><th>स्वामी</th><th>Range</th><th>पद अक्षर (1-4)</th></tr></thead><tbody>"+
+    ref.nakshatras.map(n=>"<tr"+(n.nakshatra===mainNak?" class='ref-highlight'":"")+"><td>"+n.number+"</td><td><b>"+n.nakshatra_hi+"</b> ("+n.nakshatra+")</td><td>"+n.lord+"</td><td>"+n.from_deg+"&deg;&ndash;"+n.to_deg+"&deg;</td><td>"+n.pada_syllables_hi.join(", ")+"</td></tr>").join("")+
+    "</tbody></table></div>";
+
+  let rTbl="<div class='table-wrap'><table><thead><tr><th>राशि</th><th>नाम अक्षर (Baby Naming Letters)</th></tr></thead><tbody>"+
+    ref.signs.map(s=>"<tr"+(s.sign===mainSign?" class='ref-highlight'":"")+"><td><b>"+s.sign_hi+"</b> ("+s.sign+")</td><td>"+s.naam_akshar_hi.join(", ")+"</td></tr>").join("")+
+    "</tbody></table></div>";
+
+  return "<h3>संदर्भ (Reference)</h3>"+mainCard+
+    "<h3>राशि चक्र (12 Rashi)</h3>"+zTbl+
+    "<h3>नक्षत्र (27, पद अक्षर सहित)</h3>"+nTbl+
+    "<h3>राशि नाम अक्षर</h3>"+rTbl;
+}
+function setStatus(kind,msg){
+  stWrap.className="status-line"+(kind?" "+kind:"");
+  st.innerText=msg;
+}
+function setBusy(b){
+  spin.classList.toggle("on",b);
+  calcBtn.disabled=b;
+  calcLbl.innerText=b?"Calculating…":"Calculate Chart";
+}
+
+async function go(){
+  setBusy(true); setStatus("busy","Calculating…");
+  let q={name:nm.value,date:dt.value,time:tm.value,latitude:+la.value,longitude:+lo.value,timezone:+tz.value};
+  LAST_BIRTH=q;
+  try{
+    let r=await fetch("/api/calculate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(q)}),x=await r.json();
+    if(!r.ok)throw Error(x.detail);
+    LAST=x;
+    renderCharts(x); renderPlanets(x); renderCusps(x); renderSequence(x); renderAspects(x); renderDasha(x); renderPanchang(x); renderGemstones(x);
+    d.innerHTML="<h2>Debug<button class='btn-ghost copy-btn' onclick='copyDebug()'>Copy JSON</button></h2><pre id='debugPre'>"+JSON.stringify(x,null,2)+"</pre>";
+    renderRP(); renderTransit();
+    await saveCurrentKundali(true);
+    showDashboard("<b>Birth Chart</b> &middot; "+(q.name||"Untitled")+" &middot; "+q.date+" "+q.time);
+    setStatus("ok","Calculated for "+(q.name||"chart")+" · saved");
+  }catch(e){
+    setStatus("err","Error: "+e.message);
+  }finally{
+    setBusy(false);
+  }
+}
+function copyDebug(){
+  const t=document.getElementById('debugPre').innerText;
+  navigator.clipboard&&navigator.clipboard.writeText(t);
+}
+
+function renderPlanets(x){
+  let extra=[["tenancy",r=>r.tenancy],["signifies",r=>badges(r.signifies_houses)]];
+  let h="<h2>Planets</h2><p class='subtle'>Star lord column highlighted &middot; Tenancy: <b>T</b>=tenanted (is star lord of at least one other planet), <b>UT</b>=untenanted (star lord of none), <b>Self</b>=its own star lord</p>";
+  h+=tbl(Object.entries(x.planets),"Planet",["sign_lord","star_lord","sub_lord","sub_sub_lord"],extra,"star_lord");
+  h+="<h3>Position Details</h3>";
+  h+=tbl(Object.entries(x.planets),"Planet",["dms","sign","nakshatra","pada"],[],null);
+  p.innerHTML=h;
+}
+function renderCusps(x){
+  c.innerHTML="<h2>KP Cusps</h2><p class='subtle'>Sub lord column highlighted</p>"+tbl(x.cusps.map(v=>["H"+v.house,v]),"House",csFull,[],"sub_lord");
+}
+function renderSequence(x){
+  let h="<h2>KP Signification Sequence</h2><p class='subtle'>Planet &rarr; Star Lord &rarr; Sub Lord &rarr; Star of Sub &middot; <b style='color:var(--gold-bright)'>Fruitful Significators</b> = house numbers repeating in more than one of the 4 lists below (stronger signification)</p><div class='grid2'>";
+  for(const [name,n] of Object.entries(x.sequence)){
+    h+="<div class='dcard'><h4>"+name+"</h4>";
+    h+="<div>Planet: <b>"+name+"</b> "+badges(n.planet_houses)+"</div>";
+    h+="<div>Star Lord: <b>"+n.star_lord+"</b> "+badges(n.star_lord_houses)+"</div>";
+    h+="<div>Sub Lord: <b>"+n.sub_lord+"</b> "+badges(n.sub_lord_houses)+"</div>";
+    h+="<div>Star of Sub: <b>"+n.star_of_sub+"</b> "+badges(n.star_of_sub_houses)+"</div>";
+    h+="<div style='margin-top:6px'>Combined: "+badges(n.combined)+"</div>";
+    h+="<div style='margin-top:6px'>Fruitful Significators: "+(n.fruitful.length?badges(n.fruitful,"badge-fruit"):"<span class='small'>None</span>")+"</div>";
+    if(n.signification_sources){
+      h+="<div class='small' style='margin-top:8px'><b>Signification Sources</b><br>";
+      for(const s of n.signification_sources) h+=s.type+" ("+s.via+") &rarr; "+badges(s.houses)+"<br>";
+      h+="</div>";
+    }
+    h+="</div>";
+  }
+  sq.innerHTML=h+"</div>";
+}
+function renderAspects(x){
+  as.innerHTML="<h2>Aspects (Hit System)</h2>"+
+    "<p class='subtle'>Positive: 27-33&deg; (Semi-Sextile), 55-65&deg; (Sextile), 112-128&deg; (Trine) &nbsp;|&nbsp; Negative: 42-48&deg; (Minor), 85-95&deg; (Major), 172-188&deg; (Killer)</p>"+
+    "<div class='field' style='max-width:280px;margin-bottom:16px'>"+
+      "<label>Filter hits</label>"+
+      "<select id='hitFilterSel' class='hit-select' onchange='renderHitTables(LAST.aspects,this.value)'>"+
+        "<option value='all'>All Hits</option>"+
+        "<option value='+'>Positive (all)</option>"+
+        "<option value='-'>Negative (all)</option>"+
+        "<option value='Semi-Sextile Hit'>Semi-Sextile Hit (30&deg;)</option>"+
+        "<option value='Sextile Hit'>Sextile Hit (60&deg;)</option>"+
+        "<option value='Trine Hit'>Trine Hit (120&deg;)</option>"+
+        "<option value='Minor Hit'>Minor Hit (45&deg;)</option>"+
+        "<option value='Major Hit'>Major Hit (90&deg;)</option>"+
+        "<option value='Killer Hit'>Killer Hit (180&deg;)</option>"+
+      "</select>"+
+    "</div><div id='hitBody'></div>";
+  renderHitTables(x.aspects,"all");
+}
+function hitMatch(a,f){
+  if(f==="all")return true;
+  if(f==="+")return a.hit==="+";
+  if(f==="-")return a.hit==="-";
+  return a.band===f;
+}
+function renderHitTables(aspects,f){
+  let pp=aspects.planet_planet.filter(a=>hitMatch(a,f));
+  let ph=aspects.planet_house.filter(a=>hitMatch(a,f));
+  let h="<h3>Planet to Planet Hits ("+pp.length+")</h3><div class='table-wrap'><table><thead><tr><th>From</th><th>To</th><th>From Deg</th><th>To Deg</th><th>Diff</th><th>Hit</th><th>Band</th></tr></thead><tbody>";
+  for(const a of pp) h+="<tr><td>"+a.from+"</td><td>"+a.to+"</td><td>"+a.from_deg+"</td><td>"+a.to_deg+"</td><td>"+a.diff+"</td><td class='"+(a.hit=="+"?"hit-plus":"hit-minus")+"'>"+a.hit+"</td><td>"+(a.band||"&mdash;")+"</td></tr>";
+  h+="</tbody></table></div><h3>Planet to House Hits ("+ph.length+")</h3><div class='table-wrap'><table><thead><tr><th>Planet</th><th>House</th><th>Planet Deg</th><th>Cusp Deg</th><th>Diff</th><th>Hit</th><th>Band</th></tr></thead><tbody>";
+  for(const a of ph) h+="<tr><td>"+a.planet+"</td><td>H"+a.house+"</td><td>"+a.planet_deg+"</td><td>"+a.cusp_deg+"</td><td>"+a.diff+"</td><td class='"+(a.hit=="+"?"hit-plus":"hit-minus")+"'>"+a.hit+"</td><td>"+(a.band||"&mdash;")+"</td></tr>";
+  hitBody.innerHTML=h+"</tbody></table></div>";
+}
+function todayInRange(s,e){let t=new Date().toISOString().slice(0,10);return s<=t&&t<e;}
+function miniDashaTable(list){
+  if(!list||!list.length) return "<p class='small'>No data</p>";
+  let h="<table class='mtable'><thead><tr><th>Lord</th><th>Start</th><th>End</th><th>Yrs</th></tr></thead><tbody>";
+  for(const n of list){
+    let cur=todayInRange(n.start,n.end);
+    h+="<tr class='"+(cur?'now':'')+"'><td><b>"+n.lord+"</b>"+(cur?' <span class="badge">NOW</span>':'')+"</td><td>"+n.start+"</td><td>"+n.end+"</td><td>"+n.years+"</td></tr>";
+  }
+  return h+"</tbody></table>";
+}
+const DASHA_YEARS_ORDER=["Sun","Moon","Mars","Rahu","Jupiter","Saturn","Mercury","Ketu","Venus"];
+const DASHA_YEARS={Sun:6,Moon:10,Mars:7,Rahu:18,Jupiter:16,Saturn:19,Mercury:17,Ketu:7,Venus:20};
+function durationBadges(){
+  return "<div class='dur-badges'>"+DASHA_YEARS_ORDER.map(p=>
+    "<span class='dur-chip'><span class='dur-dot' style='background:"+PLANET_COLORS[p]+"'></span>"+p+" "+DASHA_YEARS[p]+"Y</span>"
+  ).join("")+"</div>";
+}
+function dseqCard(cls,label,lord,seq){
+  if(!lord||!seq) return "<div class='dseq-card "+cls+"' id='dseq_"+cls+"'><div class='dseq-title'>"+label+"</div><p class='small'>No data</p></div>";
+  let color=PLANET_COLORS[lord]||"#8a7f66";
+  let h="<div class='dseq-card "+cls+"' id='dseq_"+cls+"'>";
+  h+="<div class='dseq-head'><div class='dseq-icon' style='background:"+color+"'>"+(ABBR[lord]||lord.slice(0,2))+"</div><div class='dseq-title'>"+label+": "+lord+"</div></div>";
+  h+="<div class='dseq-row'><span class='lbl'>Planet</span><span class='val'>"+lord+"</span>"+badges(seq.planet_houses)+"</div>";
+  h+="<div class='dseq-row'><span class='lbl'>Star Lord</span><span class='val'>"+seq.star_lord+"</span>"+badges(seq.star_lord_houses)+"</div>";
+  h+="<div class='dseq-row'><span class='lbl'>Sub Lord</span><span class='val'>"+seq.sub_lord+"</span>"+badges(seq.sub_lord_houses)+"</div>";
+  h+="<div class='dseq-row'><span class='lbl'>Star of Sub</span><span class='val'>"+seq.star_of_sub+"</span>"+badges(seq.star_of_sub_houses)+"</div>";
+  h+="<div class='dseq-combined'><span class='small'>Combined Houses:</span><div style='margin-top:6px'>"+badges(seq.combined,"badge-green")+"</div></div>";
+  h+="<div class='dseq-combined'><span class='small'>Fruitful Significators:</span><div style='margin-top:6px'>"+(seq.fruitful.length?badges(seq.fruitful,"badge-fruit"):"<span class='small'>None</span>")+"</div></div>";
+  h+="</div>";
+  return h;
+}
+function renderDasha(x){
+  const curMd=x.dasha.mahadasha.find(md=>todayInRange(md.start,md.end))||x.dasha.mahadasha[0];
+  const adList=curMd.antardasha||[];
+  const curAd=adList.find(ad=>todayInRange(ad.start,ad.end))||adList[0];
+
+  let h="<h2>Vimshottari Dasha</h2><p class='subtle'>Birth Nakshatra Lord: <b style='color:var(--ivory)'>"+x.dasha.birth_nakshatra_lord+"</b></p>";
+
+  h+="<div class='dseq-wrap'>";
+  h+="<h3>Dasha Signification Sequence</h3><p class='subtle'>Currently running Mahadasha, Antardasha and Pratyantardasha, each with its own Planet &rarr; Star Lord &rarr; Sub Lord &rarr; Star of Sub chain</p>";
+  h+="<div class='dseq-grid'>"+
+     dseqCard('md','Mahadasha',curMd.lord,x.sequence[curMd.lord])+
+     dseqCard('ad','Antardasha',curAd&&curAd.lord,curAd&&x.sequence[curAd.lord])+
+     "<div class='dseq-card pd' id='dseq_pd'><div class='dseq-title'>Pratyantardasha</div><p class='small'>Loading&hellip;</p></div>"+
+     "</div>";
+  h+="<h4>Vimshottari Dasha Duration (120 Years Total)</h4>"+durationBadges();
+  h+="</div>";
+
+  h+="<h3>Mahadasha Timeline</h3><div class='table-wrap'><table><thead><tr><th>Mahadasha</th><th>Start</th><th>End</th><th>Years</th></tr></thead><tbody>";
+  for(const md of x.dasha.mahadasha){
+    let cur=todayInRange(md.start,md.end);
+    h+="<tr class='"+(cur?'now':'')+"'><td><b>"+md.lord+"</b>"+(cur?' <span class="badge">NOW</span>':'')+"</td><td>"+md.start+"</td><td>"+md.end+"</td><td>"+md.years+"</td></tr>";
+  }
+  h+="</tbody></table></div>";
+  h+="<h3>Currently Running Periods</h3><p class='subtle'>Mahadasha &rarr; Antardasha &rarr; Pratyantardasha &rarr; Sukshma Dasha &rarr; Prana Dasha (each column shows the full list at that level; the running one is highlighted NOW)</p>";
+  h+="<div class='dasha-cascade'>"+
+     "<div class='dcol'><h4>Mahadasha</h4><div id='dcMD'></div></div>"+
+     "<div class='dcol'><h4>Antardasha</h4><div id='dcAD'></div></div>"+
+     "<div class='dcol'><h4>Pratyantardasha</h4><div id='dcPD'><p class='small'>Loading&hellip;</p></div></div>"+
+     "<div class='dcol'><h4>Sukshma Dasha</h4><div id='dcSD'><p class='small'>Loading&hellip;</p></div></div>"+
+     "<div class='dcol'><h4>Prana Dasha</h4><div id='dcPR'><p class='small'>Loading&hellip;</p></div></div>"+
+     "</div>";
+  da.innerHTML=h;
+  dcMD.innerHTML=miniDashaTable(x.dasha.mahadasha);
+  dcAD.innerHTML=miniDashaTable(adList);
+  fetchDeepDasha(curMd,curAd);
+}
+async function fetchDeepDasha(md,ad){
+  if(!ad){dcPD.innerHTML="<p class='small'>No antardasha data</p>";dcSD.innerHTML="";dcPR.innerHTML="";return;}
+  try{
+    let body={birth:LAST_BIRTH,chain:[md.lord,ad.lord],levels:3};
+    let r=await fetch("/api/dasha_drill",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    let x=await r.json();
+    if(!r.ok)throw Error(x.detail||"drill failed");
+    const pdList=x.periods||[];
+    dcPD.innerHTML=miniDashaTable(pdList);
+    const curPd=pdList.find(p=>todayInRange(p.start,p.end))||pdList[0];
+    const sdList=(curPd&&curPd.antardasha)||[];
+    dcSD.innerHTML=miniDashaTable(sdList);
+    const curSd=sdList.find(s=>todayInRange(s.start,s.end))||sdList[0];
+    const prList=(curSd&&curSd.antardasha)||[];
+    dcPR.innerHTML=miniDashaTable(prList);
+    const dseqPdEl=document.getElementById('dseq_pd');
+    if(dseqPdEl&&curPd) dseqPdEl.outerHTML=dseqCard('pd','Pratyantardasha',curPd.lord,LAST.sequence[curPd.lord]);
+  }catch(e){
+    dcPD.innerHTML="<p class='small' style='color:var(--neg)'>"+e.message+"</p>";
+    dcSD.innerHTML="";dcPR.innerHTML="";
+  }
+}
+async function renderPanchang(x){
+  const pn=x.panchang;
+  pa.innerHTML="<h2>Panchang</h2><div class='table-wrap'><table><tbody>"+
+    "<tr><th>Paksha</th><td>"+pn.tithi_details.paksha+"</td></tr>"+
+    "<tr><th>Tithi</th><td>"+pn.tithi_details.tithi+" (#"+pn.tithi_details.tithi_number+")</td></tr>"+
+    "<tr><th>Yoga</th><td>"+pn.yoga_details.yoga+"</td></tr>"+
+    "<tr><th>Karan</th><td>"+pn.karan_details.karan+"</td></tr>"+
+    "<tr><th>Vaar</th><td>"+pn.vaar+"</td></tr>"+
+    "<tr><th>Sunrise</th><td>"+pn.sunrise+"</td></tr>"+
+    "<tr><th>Sunset</th><td>"+pn.sunset+"</td></tr>"+
+    "</tbody></table></div><p id='refLoading' class='status-line busy'>Loading reference tables…</p>";
+  try{
+    let ref=await fetchRefCache();
+    document.getElementById('refLoading').outerHTML=renderReferenceBlock(x,ref);
+  }catch(e){
+    document.getElementById('refLoading').outerHTML="<p class='status-line err'>Reference data load nahi hui: "+e.message+"</p>";
+  }
+}
+function renderGemstones(x){
+  const g=x.gemstone;
+  let h="<h2>Gemstone Suggestions</h2>";
+  h+="<p class='subtle'>Three-step Trikona-lord check: shortlist the 1st, 5th and 9th house lords, then screen out anything sitting in a dusthana house (6th/8th/12th) or debilitated in its own sign.</p>";
+
+  h+="<div class='gem-steps'>";
+  h+="<div class='dcard'><h4>Step 1 &middot; Trikona lords (1st, 5th, 9th house)</h4>";
+  for(const t of g.trikona) h+="<div>House "+t.house+" &middot; "+t.sign+" (Rashi "+t.sign_number+") &rarr; Lord: <b>"+t.lord+"</b></div>";
+  h+="<div style='margin-top:8px' class='small'>Shortlisted planets: "+badges(g.shortlist)+"</div></div>";
+
+  h+="<div class='dcard'><h4>Step 2 &middot; Dusthana check (6th, 8th or 12th house)</h4>";
+  for(const r of g.results) h+="<div><span class='gem-check "+(r.dusthana?'bad':'ok')+"'>"+(r.dusthana?'&#10007;':'&#10003;')+"</span> "+r.planet+" is in house "+r.house+" &rarr; "+(r.dusthana?"dusthana, excluded":"clear")+"</div>";
+  h+="</div>";
+
+  h+="<div class='dcard'><h4>Step 3 &middot; Debilitation check</h4>";
+  for(const r of g.results) h+="<div><span class='gem-check "+(r.debilitated?'bad':'ok')+"'>"+(r.debilitated?'&#10007;':'&#10003;')+"</span> "+r.planet+" is in "+r.sign+" &rarr; "+(r.debilitated?"debilitated, excluded":"not debilitated")+"</div>";
+  h+="</div></div>";
+
+  const recommended=g.results.filter(r=>r.recommended);
+  const excluded=g.results.filter(r=>!r.recommended);
+
+  h+="<h3>Recommended for you</h3>";
+  if(recommended.length){
+    h+="<div class='gem-grid'>";
+    for(const r of recommended){
+      h+="<div class='gem-card'><h4>"+r.gem+"</h4><div class='small' style='margin-bottom:8px'>For "+r.planet+"</div>"+
+        "<div class='gem-row'><span>Metal</span><b>"+r.metal+"</b></div>"+
+        "<div class='gem-row'><span>Finger</span><b>"+r.finger+"</b></div>"+
+        "<div class='gem-row'><span>Day to wear</span><b>"+r.day+"</b></div>"+
+        "<div class='gem-row'><span>Mantra</span><b>"+r.mantra+"</b></div>"+
+        "<div class='gem-row'><span>Mantra count</span><b>"+r.mantra_count.toLocaleString()+"</b></div>"+
+        "<div class='gem-why'>"+r.reason+"</div></div>";
+    }
+    h+="</div>";
+  }else{
+    h+="<p class='small'>None of the trikona lords cleared both checks for this chart &mdash; this needs a case-by-case remedial review instead of a default pick.</p>";
+  }
+
+  if(excluded.length){
+    h+="<h3>Not recommended</h3><div class='gem-grid'>";
+    for(const r of excluded) h+="<div class='gem-card excluded'><h4>"+r.gem+"</h4><div class='small' style='margin-bottom:8px'>For "+r.planet+"</div><div class='gem-why'>Excluded: "+r.reason+"</div></div>";
+    h+="</div>";
+  }
+
+  h+="<h3>How to wear</h3><ol class='gem-howto'>"+
+    "<li>The night before, soak the gemstone in a mix of Gangajal and raw milk.</li>"+
+    "<li>Rinse it under clean running water the next morning.</li>"+
+    "<li>Wear it for the first time on the planet's day, ideally during Shukla Paksha (waxing moon).</li>"+
+    "<li>Chant the planet's mantra the listed number of times while wearing it for the first time.</li>"+
+    "<li>Put it on within an hour of sunrise for the best effect.</li>"+
+    "</ol>";
+
+  h+="<div class='gem-disclaimer'>These picks follow a classical Trikona-lord gemstone method &mdash; trine-house lordship, a dusthana screen, and a debilitation check &mdash; commonly used in Vedic astrology. Gemstone therapy is a personal and sometimes costly decision; please confirm with a qualified astrologer before purchasing or wearing anything, especially stronger-acting stones like Blue Sapphire and Hessonite.</div>";
+
+  gm.innerHTML=h;
+}
+const SENT_CLASS={Favorable:"fav",Mixed:"mix",Challenging:"chg"};
+function predCard(label,per){
+  if(!per) return "<div class='pred-card mix'><div class='pred-title'>"+label+"</div><p class='small'>No data</p></div>";
+  const sc=SENT_CLASS[per.sentiment]||"mix";
+  let h="<div class='pred-card "+sc+"'>";
+  h+="<div class='pred-head'><div class='pred-title'>"+label+": "+per.lord+"</div><span class='pred-sentiment "+sc+"'>"+per.sentiment+"</span></div>";
+  h+="<div class='pred-range'>"+per.start+" &rarr; "+per.end+" &middot; Houses "+badges(per.houses)+"</div>";
+  for(const t of per.themes){
+    h+="<div class='pred-theme'><span class='pred-dot "+t.tone+"'></span><span>"+t.text+"</span></div>";
+  }
+  h+="<div class='pred-summary'>"+per.summary+"</div>";
+  h+="</div>";
+  return h;
+}
+function renderPredictions(x){
+  const pr2=x.predictions;
+  let h="<h2>Predictions</h2><p class='subtle'>Dasha + Significators method: for the currently running Mahadasha, Antardasha and Pratyantardasha, the lord's combined significator houses (Planet &rarr; Star Lord &rarr; Sub Lord &rarr; Star of Sub) are mapped onto four life themes &mdash; Career &amp; Finance, Marriage &amp; Relationships, Health, and General &amp; Family.</p>";
+  h+="<div class='pred-grid'>"+
+    predCard("Mahadasha",pr2.mahadasha)+
+    predCard("Antardasha",pr2.antardasha)+
+    predCard("Pratyantardasha",pr2.pratyantardasha)+
+    "</div>";
+  h+="<div class='pred-disclaimer'>These are rule-based, chart-derived indications meant as a general guide, not a guarantee &mdash; real outcomes depend on the full chart, transits and personal effort. For major life decisions, please consult a qualified astrologer.</div>";
+  pr.innerHTML=h;
+}
+function renderHouseInsights(list){
+  let h="<div class='grid2'>";
+  for(const n of list){
+    h+="<div class='dcard'><h4>House "+n.house+" — "+n.title+" ("+n.sign+")</h4>"+
+      "<div class='small' style='margin-bottom:6px'>Lord: <b>"+n.lord+"</b> &middot; placed in your "+n.lord_house+"th house</div>"+
+      "<div>"+n.text+"</div>"+
+      "<div class='gem-why' style='margin-top:8px'><b>Suggestion:</b> "+n.suggestion+"</div></div>";
+  }
+  return h+"</div>";
+}
+function renderHitRemedies(hr){
+  if(!hr.remedies.length) return "<p class='small'>No significant obstructions found on your currently active dasha planets right now &mdash; no urgent Hit Theory remedy needed.</p>";
+  let h="<div class='gem-grid'>";
+  for(const r of hr.remedies){
+    let targetLabel=r.target_type==='house'?('House '+r.target):r.target;
+    h+="<div class='gem-card excluded'><h4>Treat "+r.cause+"</h4>"+
+      "<div class='small' style='margin-bottom:8px'>"+r.severity+" &middot; "+r.band+" ("+r.degree+"&deg;) on "+targetLabel+"</div>"+
+      "<div class='gem-row'><span>Body Zone</span><b>"+r.body_zone+"</b></div>"+
+      "<div class='gem-row'><span>Oil</span><b>"+r.oil+"</b></div>"+
+      "<div class='gem-row'><span>Symbol Color</span><b>"+r.symbol_color+"</b></div>"+
+      "<div class='gem-row'><span>Direction to check</span><b>"+r.direction+"</b></div>"+
+      "<div class='gem-row'><span>Day</span><b>"+r.day+"</b></div>"+
+      "<div class='gem-row'><span>Mantra</span><b>"+r.mantra+"</b></div>"+
+      "</div>";
+  }
+  return h+"</div>";
+}
+function renderVastu(v){
+  const rows=list=>list.map(r=>"<tr><td>"+r.priority+"</td><td>"+r.use_for+"</td><td>House "+r.house+" ("+r.sign+")</td><td><b>"+r.direction+"</b></td></tr>").join("");
+  let h="<h4>Best Directions — Work/Office</h4><div class='table-wrap'><table><thead><tr><th>#</th><th>For</th><th>House</th><th>Direction</th></tr></thead><tbody>"+rows(v.office)+"</tbody></table></div>";
+  h+="<h4>Best Directions — Bedroom</h4><div class='table-wrap'><table><thead><tr><th>#</th><th>For</th><th>House</th><th>Direction</th></tr></thead><tbody>"+rows(v.bedroom)+"</tbody></table></div>";
+  h+="<h4>Directions to Avoid (Dusthana houses 6, 8, 12)</h4><div class='table-wrap'><table><thead><tr><th>House</th><th>Sign</th><th>Direction</th></tr></thead><tbody>"+
+    v.avoid.map(a=>"<tr><td>House "+a.house+"</td><td>"+a.sign+"</td><td>"+a.direction+"</td></tr>").join("")+"</tbody></table></div>";
+  return h;
+}
+function renderFullReport(x){
+  let h="<h2>Full Report <button class='btn-ghost copy-btn fr-noprint' type='button' onclick='window.print()'>Download PDF</button></h2>";
+  h+="<p class='subtle'>Client-ready summary &middot; combines house insights, currently active Dasha remedies, and Vastu directions. Use Download PDF (browser's print-to-PDF) to save/share.</p>";
+  h+="<h3>Client Profile</h3><div class='table-wrap'><table><tbody>"+
+    "<tr><th>Name</th><td>"+(x.input.name||"—")+"</td></tr>"+
+    "<tr><th>Date of Birth</th><td>"+x.input.date+"</td></tr>"+
+    "<tr><th>Time of Birth</th><td>"+x.input.time+"</td></tr>"+
+    "<tr><th>Ascendant</th><td>"+x.ascendant.sign+"</td></tr>"+
+    "<tr><th>Moon Sign / Nakshatra</th><td>"+x.planets.Moon.sign+" / "+x.planets.Moon.nakshatra+"</td></tr>"+
+    "</tbody></table></div>";
+  h+="<h3>House-by-House Insights</h3>"+renderHouseInsights(x.house_narratives);
+  h+="<h3>Hit Theory — Remedies for Currently Active Dasha Planets</h3><p class='subtle'>Active right now: "+badges(x.hit_remedies.active_planets)+"</p>"+renderHitRemedies(x.hit_remedies);
+  h+="<h3>Vastu Favorable Directions</h3>"+renderVastu(x.vastu);
+  h+="<div class='fr-noprint'><h3>AI Insights (optional)</h3>"+
+    "<p class='subtle'>Uses your own Claude API key, saved locally on your machine, to generate an extra freeform paragraph. Get a key at console.anthropic.com.</p>"+
+    "<div id='aiKeyStatus' class='small' style='margin-bottom:10px'></div>"+
+    "<div class='field-row'><div class='field'><label>Claude API Key</label><input id='aiKeyInput' type='password' placeholder='sk-ant-...'></div>"+
+    "<div class='field'><label>&nbsp;</label><button class='btn-ghost' type='button' onclick='saveAIKey()'>Save Key</button></div></div>"+
+    "<div class='field'><label>Client's stated concerns (optional)</label><input id='aiConcerns' placeholder='e.g. Career, Marriage, Health'></div>"+
+    "<div class='field'><button type='button' onclick='generateAIInsights()'>Generate AI Insights</button></div>"+
+    "<div id='aiInsightOut'></div></div>"+
+    "<div id='aiInsightPrint'></div>";
+  h+="<div class='gem-disclaimer'>Body/home remedies use a standard classical Kalapurusha body-zone and Rashi-direction mapping; they are traditional guidance, not medical or professional advice. Please use your judgement and consult a qualified astrologer for major decisions.</div>";
+  fr.innerHTML=h;
+  checkAIConfig();
+}
+async function checkAIConfig(){
+  try{
+    let r=await fetch('/api/config');let x=await r.json();
+    aiKeyStatus.innerText=x.has_key?"A Claude API key is already saved on this machine.":"No API key saved yet.";
+  }catch(e){ if(document.getElementById('aiKeyStatus')) aiKeyStatus.innerText=""; }
+}
+async function saveAIKey(){
+  const key=aiKeyInput.value.trim();
+  if(!key)return;
+  try{
+    let r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:key})});
+    if(!r.ok)throw Error('save failed');
+    aiKeyInput.value='';
+    checkAIConfig();
+  }catch(e){ aiKeyStatus.innerText="Could not save key."; }
+}
+async function generateAIInsights(){
+  aiInsightOut.innerHTML="<p class='small'>Generating…</p>";
+  let body={name:nm.value,date:dt.value,time:tm.value,latitude:+la.value,longitude:+lo.value,timezone:+tz.value,concerns:(document.getElementById('aiConcerns')||{}).value||""};
+  try{
+    let r=await fetch('/api/ai_insights',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    let x=await r.json();
+    if(!r.ok)throw Error(x.detail||'failed');
+    aiInsightOut.innerHTML="<div class='dcard'>"+x.insight.replaceAll('\n','<br>')+"</div>";
+    aiInsightPrint.innerHTML="<h3>AI Insights</h3><div class='dcard'>"+x.insight.replaceAll('\n','<br>')+"</div>";
+  }catch(e){
+    aiInsightOut.innerHTML="<p class='small' style='color:var(--neg)'>"+e.message+"</p>";
+  }
+}
+async function renderRP(){
+  let now=new Date();
+  let d2=now.toISOString().slice(0,10), t2=now.toTimeString().slice(0,8);
+  rp.innerHTML="<h2>Ruling Planets (current moment)</h2><div class='mini-form'>"+
+    "<div class='field'><label>Date</label><input id='rpd' type='date' value='"+d2+"'></div>"+
+    "<div class='field'><label>Time</label><input id='rpt' type='time' step='1' value='"+t2+"'></div>"+
+    "<div class='field'><button onclick='fetchRP()'>Get Ruling Planets</button></div>"+
+    "</div><div id='rpOut'></div>";
+}
+async function fetchRP(){
+  let q={date:rpd.value,time:rpt.value,latitude:+la.value,longitude:+lo.value,timezone:+tz.value};
+  let r=await fetch("/api/ruling_planets",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(q)}),x=await r.json();
+  if(!r.ok){rpOut.innerHTML="<p class='small' style='color:var(--neg)'>Error: "+x.detail+"</p>";return;}
+  rpOut.innerHTML="<div class='table-wrap'><table><tbody>"+
+    "<tr><th>Day Lord</th><td>"+x.day_lord+"</td></tr>"+
+    "<tr><th>Ascendant Sign Lord</th><td>"+x.ascendant_sign_lord+"</td></tr>"+
+    "<tr><th>Ascendant Star Lord</th><td>"+x.ascendant_star_lord+"</td></tr>"+
+    "<tr><th>Ascendant Sub Lord</th><td>"+x.ascendant_sub_lord+"</td></tr>"+
+    "<tr><th>Moon Sign Lord</th><td>"+x.moon_sign_lord+"</td></tr>"+
+    "<tr><th>Moon Star Lord</th><td>"+x.moon_star_lord+"</td></tr>"+
+    "<tr><th>Moon Sub Lord</th><td>"+x.moon_sub_lord+"</td></tr>"+
+    "</tbody></table></div><p style='margin-top:12px'><b>Ruling Planets Set:</b><br>"+badges(x.ruling_planets_set)+"</p>";
+}
+async function renderTransit(){
+  let now=new Date();
+  let d2=now.toISOString().slice(0,10), t2=now.toTimeString().slice(0,8);
+  tr.innerHTML="<h2>Birth vs Transit Comparison</h2><div class='mini-form'>"+
+    "<div class='field'><label>Transit Date</label><input id='trd' type='date' value='"+d2+"'></div>"+
+    "<div class='field'><label>Transit Time</label><input id='trt' type='time' step='1' value='"+t2+"'></div>"+
+    "<div class='field'><button onclick='fetchTransit()'>Compare</button></div>"+
+    "</div><div id='trOut'></div>";
+}
+async function fetchTransit(){
+  let birth={name:nm.value,date:dt.value,time:tm.value,latitude:+la.value,longitude:+lo.value,timezone:+tz.value};
+  let transit={date:trd.value,time:trt.value,latitude:+la.value,longitude:+lo.value,timezone:+tz.value};
+  let r=await fetch("/api/transit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({birth,transit})}),x=await r.json();
+  if(!r.ok){trOut.innerHTML="<p class='small' style='color:var(--neg)'>Error: "+x.detail+"</p>";return;}
+  let h="<div class='table-wrap'><table><thead><tr><th>Planet</th><th>Birth Sign</th><th>Birth House</th><th>Transit Sign</th><th>Transit House</th><th>Movement</th></tr></thead><tbody>";
+  for(const row of x.comparison){
+    let m=row.movement;
+    h+="<tr><td>"+row.planet+"</td><td>"+row.birth_sign+"</td><td>"+row.birth_house+"</td><td>"+row.transit_sign+"</td><td>"+row.transit_house+"</td><td class='"+(m>=0?'hit-plus':'hit-minus')+"'>"+(m>=0?'+':'')+m+"</td></tr>";
+  }
+  trOut.innerHTML=h+"</tbody></table></div>";
+}
+
+function tab(id,b){
+  document.querySelectorAll(".pane").forEach(x=>x.classList.add("hide"));
+  document.getElementById(id).classList.remove("hide");
+  document.querySelectorAll("#tabbar button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+}
+
+/* ---------------- Page navigation: Setup <-> Dashboard ---------------- */
+function setPageMode(mode){
+  modeBirthBtn.classList.toggle("on",mode==="birth");
+  modeHoraryBtn.classList.toggle("on",mode==="horary");
+  setupBirth.classList.toggle("hide",mode!=="birth");
+  setupHorary.classList.toggle("hide",mode!=="horary");
+}
+function showDashboard(summaryHtml){
+  pageSetup.classList.add("hide");
+  pageDashboard.classList.remove("hide");
+  dashSummary.innerHTML=summaryHtml||"";
+  document.querySelectorAll(".pane").forEach(x=>x.classList.add("hide"));
+  ch.classList.remove("hide");
+  document.querySelectorAll("#tabbar button").forEach(x=>x.classList.remove("on"));
+  document.querySelector("#tabbar button").classList.add("on");
+}
+function backToSetup(){
+  pageDashboard.classList.add("hide");
+  pageSetup.classList.remove("hide");
+}
+
+document.querySelectorAll('.sidebar input').forEach(el=>{
+  if(el.id==="placeSearch")return;
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+});
+refreshSavedCache();
+
+/* ---------------- KP Horary ---------------- */
+let hoDtMode="current",hoLocMode="gps",hoNumMode="universe";
+let HO_GPS_LAT=null,HO_GPS_LON=null,HO_UNIVERSE_NUM=null;
+
+function fillHoCurrentDateTime(){
+  let now=new Date();
+  hoDate.value=now.toISOString().slice(0,10);
+  hoTime.value=now.toTimeString().slice(0,8);
+}
+function setHoDtMode(mode){
+  hoDtMode=mode;
+  hoDtCurrentBtn.classList.toggle("on",mode==="current");
+  hoDtManualBtn.classList.toggle("on",mode==="manual");
+  if(mode==="current"){
+    fillHoCurrentDateTime();
+    hoDate.readOnly=true;hoTime.readOnly=true;
+    hoDtHint.innerText="Current date/time auto-filled — \"Generate\" dabate hi fresh time le liya jayega.";
+  }else{
+    hoDate.readOnly=false;hoTime.readOnly=false;
+    hoDtHint.innerText="Apna date aur time daalo (jab sawaal socha/poochha gaya tha).";
+  }
+}
+function setHoLocMode(mode){
+  hoLocMode=mode;
+  hoLocGpsBtn.classList.toggle("on",mode==="gps");
+  hoLocManualBtn.classList.toggle("on",mode==="manual");
+  hoLocGps.classList.toggle("hide",mode!=="gps");
+  hoLocManual.classList.toggle("hide",mode!=="manual");
+}
+function fetchHoLocation(){
+  if(!navigator.geolocation){ hoLocStatus.innerText="Geolocation is browser mein supported nahi hai."; return; }
+  hoLocStatus.innerText="Location le rahe hain…";
+  navigator.geolocation.getCurrentPosition(function(pos){
+    HO_GPS_LAT=pos.coords.latitude;HO_GPS_LON=pos.coords.longitude;
+    hoLocStatus.innerText="Location mil gayi: "+HO_GPS_LAT.toFixed(4)+", "+HO_GPS_LON.toFixed(4);
+  },function(err){
+    hoLocStatus.innerText="Location nahi mili ("+err.message+"). Manual try karo.";
+  },{timeout:10000});
+}
+let hoPlaceDebounce=null,hoPlaceResults=[];
+function onHoPlaceInput(){
+  clearTimeout(hoPlaceDebounce);
+  const q=hoPlaceSearch.value.trim();
+  if(q.length<2){hoPlaceDropdown.classList.add("hide");hoPlaceDropdown.innerHTML="";return;}
+  hoPlaceDebounce=setTimeout(()=>doHoPlaceSearch(q),400);
+}
+async function doHoPlaceSearch(q){
+  hoPlaceDropdown.classList.remove("hide");
+  hoPlaceDropdown.innerHTML="<div class='place-msg'>Searching…</div>";
+  try{
+    let r=await fetch("/api/geocode?q="+encodeURIComponent(q));
+    let x=await r.json();
+    if(!r.ok)throw Error(x.detail||"search failed");
+    hoPlaceResults=x.results||[];
+    if(!hoPlaceResults.length){hoPlaceDropdown.innerHTML="<div class='place-msg'>No matches found</div>";return;}
+    hoPlaceDropdown.innerHTML=hoPlaceResults.map((p,i)=>
+      "<div class='place-item' data-i='"+i+"'><div class='place-name'>"+p.name+"</div><div class='place-sub'>"+(p.sub_label||"")+"</div></div>"
+    ).join("");
+    hoPlaceDropdown.querySelectorAll(".place-item").forEach(el=>el.addEventListener("click",()=>selectHoPlace(+el.dataset.i)));
+  }catch(e){
+    hoPlaceDropdown.innerHTML="<div class='place-msg'>"+e.message+"</div>";
+  }
+}
+function selectHoPlace(i){
+  const p=hoPlaceResults[i];
+  hoLa.value=p.latitude.toFixed(6);
+  hoLo.value=p.longitude.toFixed(6);
+  hoPlaceSearch.value=p.name;
+  hoPlaceDropdown.classList.add("hide");
+}
+document.addEventListener("click",e=>{
+  if(typeof hoPlaceWrap!=="undefined" && hoPlaceWrap && !hoPlaceWrap.contains(e.target)) hoPlaceDropdown.classList.add("hide");
+});
+if(document.getElementById("hoPlaceSearch")) hoPlaceSearch.addEventListener("input",onHoPlaceInput);
+
+function setHoNumMode(mode){
+  hoNumMode=mode;
+  hoNumUniverseBtn.classList.toggle("on",mode==="universe");
+  hoNumManualBtn.classList.toggle("on",mode==="manual");
+  hoNumUniverse.classList.toggle("hide",mode!=="universe");
+  hoNumManual.classList.toggle("hide",mode!=="manual");
+}
+function spinHoraryWheel(){
+  let count=0,total=26;
+  hoUniverseLabel.innerText="";
+  function step(){
+    hoWheelDisplay.innerText=1+Math.floor(Math.random()*249);
+    count++;
+    if(count<total){
+      setTimeout(step,40+(count/total)*180);
+    }else{
+      HO_UNIVERSE_NUM=1+Math.floor(Math.random()*249);
+      hoWheelDisplay.innerText=HO_UNIVERSE_NUM;
+      hoUniverseLabel.innerHTML="<b>UNIVERSE NUMBER: "+HO_UNIVERSE_NUM+"</b>";
+    }
+  }
+  step();
+}
+function setHoStatus(kind,msg){ hoStWrap.className="status-line"+(kind?" "+kind:""); hoSt.innerText=msg; }
+function setHoBusy(b){ hoSpin.classList.toggle("on",b); hoGoBtn.disabled=b; hoGoLbl.innerText=b?"Calculating…":"Generate Horary Chart"; }
+
+async function generateHorary(){
+  let date,time;
+  if(hoDtMode==="current"){ fillHoCurrentDateTime(); }
+  date=hoDate.value;time=hoTime.value;
+  if(!date||!time){ setHoStatus("err","Date aur time bharo"); return; }
+
+  let lat,lon;
+  if(hoLocMode==="gps"){
+    if(HO_GPS_LAT==null){ setHoStatus("err","Pehle \"Use My Current Location\" dabao"); return; }
+    lat=HO_GPS_LAT;lon=HO_GPS_LON;
+  }else{
+    lat=+hoLa.value;lon=+hoLo.value;
+    if(!lat||!lon){ setHoStatus("err","Location bharo (place search karo ya lat/lon bharo)"); return; }
+  }
+  let tz=+hoTz.value||5.5;
+
+  let number,mode;
+  if(hoNumMode==="universe"){
+    if(HO_UNIVERSE_NUM==null){ setHoStatus("err","Pehle \"Spin the Wheel\" dabao Universe Number ke liye"); return; }
+    number=HO_UNIVERSE_NUM;mode="universe";
+  }else{
+    number=+hoManualNum.value;mode="manual";
+    if(!number||number<1||number>249){ setHoStatus("err","1 se 249 ke beech number daalo"); return; }
+  }
+
+  setHoBusy(true); setHoStatus("busy","Horary chart bana rahe hain…");
+  try{
+    let horBody={number,date,latitude:lat,longitude:lon,timezone:tz,mode,name:"Horary #"+number};
+    let rpBody={date,time,latitude:lat,longitude:lon,timezone:tz};
+    let [horRes,rpRes]=await Promise.all([
+      fetch("/api/horary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(horBody)}),
+      fetch("/api/ruling_planets",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(rpBody)})
+    ]);
+    let x=await horRes.json();
+    if(!horRes.ok)throw Error(x.detail||"Horary calculation failed");
+    let rpX=rpRes.ok?await rpRes.json():null;
+
+    // Route the horary result through the exact same dashboard/tabs used for a birth
+    // chart — a horary chart is just calculate() run on the number-derived moment,
+    // so every existing render function works unchanged.
+    LAST=x;
+    let solvedTime=x.horary.solved_time;
+    LAST_BIRTH={name:horBody.name,date,time:solvedTime,latitude:lat,longitude:lon,timezone:tz};
+    nm.value=horBody.name;dt.value=date;tm.value=solvedTime;la.value=lat;lo.value=lon;tz.value=tz;
+    await saveCurrentKundali(true);
+
+    renderCharts(x); renderPlanets(x); renderCusps(x); renderSequence(x); renderAspects(x); renderDasha(x); renderPanchang(x); renderGemstones(x);
+    d.innerHTML="<h2>Debug<button class='btn-ghost copy-btn' onclick='copyDebug()'>Copy JSON</button></h2><pre id='debugPre'>"+JSON.stringify(x,null,2)+"</pre>";
+    renderRP(); renderTransit();
+    if(rpX){
+      rpOut.innerHTML="<div class='table-wrap'><table><tbody>"+
+        "<tr><th>Day Lord</th><td>"+rpX.day_lord+"</td></tr>"+
+        "<tr><th>Ascendant Sign Lord</th><td>"+rpX.ascendant_sign_lord+"</td></tr>"+
+        "<tr><th>Ascendant Star Lord</th><td>"+rpX.ascendant_star_lord+"</td></tr>"+
+        "<tr><th>Ascendant Sub Lord</th><td>"+rpX.ascendant_sub_lord+"</td></tr>"+
+        "<tr><th>Moon Sign Lord</th><td>"+rpX.moon_sign_lord+"</td></tr>"+
+        "<tr><th>Moon Star Lord</th><td>"+rpX.moon_star_lord+"</td></tr>"+
+        "<tr><th>Moon Sub Lord</th><td>"+rpX.moon_sub_lord+"</td></tr>"+
+        "</tbody></table></div><p style='margin-top:12px'><b>Ruling Planets Set (at the real moment of judgement):</b><br>"+badges(rpX.ruling_planets_set)+"</p>";
+    }
+
+    let summary="<b>Horary #"+number+"</b> ("+(mode==="universe"?"Universe Number":"Manual")+") &middot; "+
+      x.horary.nakshatra+" &middot; Star Lord "+x.horary.star_lord+" &middot; Sub Lord "+x.horary.sub_lord+
+      " &middot; Ascendant "+x.ascendant.sign;
+    showDashboard(summary);
+    setHoStatus("ok","Horary chart ready — Number "+number+" · saved");
+  }catch(e){
+    setHoStatus("err","Error: "+e.message);
+  }finally{
+    setHoBusy(false);
+  }
+}
+fillHoCurrentDateTime();
+</script></body></html>

@@ -1,0 +1,19 @@
+KP Local Testing Tool v1.9 - Charts tab (D1 + KP diagrams)
+==============================================================
+New: "Charts" tab (now first tab) showing two North Indian-style diamond
+chart diagrams side by side:
+- Lagna Kundli (D1): planets placed using whole-sign houses from Ascendant
+- KP Chart: planets placed using Placidus cusp-based houses
+
+Backend: each planet in calculate() output now includes:
+- house_d1  (whole-sign house number, 1-12)
+- house_kp  (Placidus cusp house number, 1-12)
+
+Validated against Nikhil's chart (24/11/1995): D1 house placement matches
+reference screenshot exactly - House1=Saturn, House3=Ketu, House9=Rahu,
+House10=Sun/Mercury/Jupiter, House11=Moon/Mars/Venus.
+
+Tested locally in sandbox: server starts clean, /api/calculate returns
+house_d1/house_kp fields, Charts tab renders in served HTML. (Sandbox has
+no public URL - this was verified via curl, not a live browser link -
+please test visually on your own machine after downloading.)

@@ -1,0 +1,25 @@
+KP Local Testing Tool v2.1 - New UI/UX design
+================================================
+Redesigned the entire frontend visual identity to match a warm-celestial
+aesthetic (deep midnight navy + champagne gold), grounded in the astrology
+subject matter itself and echoing the sacred-geometry motifs used in your
+Vastu With Nikhil brand:
+
+- Color: deep midnight navy background (#0f1424) with champagne gold
+  accents (#c9a46b), soft ivory text, muted slate-blue secondary text.
+  Subtle scattered "star" dots in the page background (fixed, ambient).
+- Typography: Cormorant Garamond (elegant serif) for headings, Inter for
+  body/labels, JetBrains Mono for all numeric/degree data (tables, dates) -
+  gives dense astrology data a precise, legible feel.
+- Signature element: a Flower-of-Life sacred-geometry mark next to the
+  title, echoing the geometry motifs in your existing brand system.
+- Tabs redesigned as pill buttons with gold active state.
+- Hit badges (+/-) use muted sage-green / soft terracotta instead of
+  harsh green/red, "Now" dasha rows highlighted with a gold left-border.
+- Chart diagrams (D1/KP) restyled to match the new navy+gold palette.
+- All functionality unchanged - same tabs, same calculations, same API.
+  Only visual design was touched (CSS + a header block); no JS logic or
+  Python backend code was modified in this update.
+
+Tested locally: server starts clean, HTML serves with new fonts/styling,
+/api/calculate still returns 200 with full data.

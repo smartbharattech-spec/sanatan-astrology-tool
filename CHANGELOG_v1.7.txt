@@ -1,0 +1,17 @@
+KP Local Testing Tool v1.7 - Frontend UI complete
+====================================================
+New API endpoints (app/main.py):
+- POST /api/ruling_planets  {date,time,latitude,longitude,timezone}
+- POST /api/transit         {birth:{...}, transit:{...}}
+- POST /api/dasha_drill     {birth:{...}, chain:["Saturn","Mars"], levels:1}  (Pratyantardasha/Sookshma)
+
+New frontend tabs (app/static/index.html):
+- Sequence   - full signification chain per planet + Rahu/Ketu source breakdown
+- Aspects    - Planet-Planet and Planet-House hit tables with +/- coloring
+- Dasha      - Mahadasha table (current one highlighted) + Antardasha drill-in
+- Panchang   - Tithi/Paksha/Yoga/Karan/Vaar/Sunrise/Sunset
+- Ruling Planets - separate date/time picker (defaults to "now"), calls /api/ruling_planets
+- Transit    - separate transit date/time picker, calls /api/transit, shows house movement
+- Planets tab now also shows T/UT/Self tenancy and Signifies Houses columns
+
+Same setup as before: setup.bat then start.bat, opens at http://127.0.0.1:8000

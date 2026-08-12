@@ -1,0 +1,37 @@
+KP Local Testing Tool v1.8
+============================
+Validated against Nikhil's own chart (24/11/1995, 13:01, Alwar) using occultking.com
+reference screenshots covering Charts/Planets/Cusps/Sequence/Aspects/Dasha tabs.
+
+CONFIRMED CORRECT (no change needed):
+- Planets: 9/9 exact match (degree, nakshatra, retrograde)
+- Cusps: exact match (H1, H7 spot-checked)
+- Dasha: Mahadasha + Antardasha dates match almost exactly (1-day rounding
+  on one boundary, negligible - due to 365.2425-day year approximation)
+- Sequence: fully correct - the mismatches seen this round were traced to a
+  bug in the REFERENCE software, not ours (see below)
+
+BUG FOUND IN REFERENCE SOFTWARE (not fixed here, just documented):
+  occultking.com's tool shows Nakshatra/Star Lord = Rahu for planets in
+  Mula nakshatra. This is incorrect - Mula's lord is Ketu under the
+  standard, universally-accepted Vimshottari 27-nakshatra-to-9-lord
+  mapping (Ashwini=Ketu ... Mula is the 19th nakshatra, 19=9+9+1, so the
+  9-lord cycle repeats back to Ketu). Our tool correctly shows Ketu.
+  This bug in the reference tool cascades into wrong Sequence-chain
+  values for any planet whose Star Lord, Sub Lord, or Star-of-Sub lands
+  on a planet placed in Mula.
+
+FIXED in this version:
+- Planet-to-Planet Aspect Hits: Rahu is now excluded from the pair list
+  (Ketu remains included). Confirmed across two independent reference
+  charts that the reference software's Planet-to-Planet hit table never
+  includes Rahu as a "From" or "To" planet, only Ketu. All 5/5 hits in
+  the Nikhil chart now match exactly.
+
+STILL UNRESOLVED:
+- Planet-to-House Aspect Hits: our tool returns more hits than the
+  reference for some planets (Sun, Mercury, Saturn) even though the
+  overlapping entries match almost exactly (formula/ranges verified
+  correct). The exact filtering rule the reference uses to show only a
+  subset of house-hits per planet is still unclear - needs more example
+  charts or direct confirmation from the reference tool's logic.

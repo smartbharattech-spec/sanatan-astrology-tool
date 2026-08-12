@@ -1,0 +1,22 @@
+KP Local Testing Tool v1.5 - Feature Expansion
+================================================
+Added to kp_engine/core.py (all returned automatically by POST /api/calculate):
+
+1. dasha        - Vimshottari Mahadasha + Antardasha (with dates), plus
+                   drill_dasha() helper for Pratyantardasha/Sookshma on demand
+2. sequence      - KP Signification Sequence per planet (Planet -> Star Lord ->
+                   Sub Lord -> Star of Sub, combined houses), with special
+                   Rahu/Ketu source breakdown (Own house / Rashi lord / Vedic aspect)
+3. aspects       - Planet-Planet and Planet-House "Hit" system based on degree
+                   difference (+ hits: 27-33,55-65,112-128 | - hits: 42-48,85-95,172-188)
+4. planets.tenancy         - "T" (Sub Lord in own sign) / "UT" (not) / "Self" (own star lord)
+5. planets.signifies_houses - houses the planet itself occupies/owns
+6. panchang      - Tithi, Paksha, Yoga, Karan, Vaar, Sunrise, Sunset
+
+Not yet wired to API endpoints (function exists in core.py, callable directly):
+- ruling_planets(p)       - KP Ruling Planets for a given moment (Day Lord, Asc/Moon Sign+Star+Sub Lord)
+- transit_comparison(birth_p, transit_p) - Birth vs Transit house movement
+
+Still pending (next phase):
+- API endpoints for ruling_planets / transit_comparison
+- Frontend UI (tabs, Lagna/KP chart diagrams) matching the full feature set

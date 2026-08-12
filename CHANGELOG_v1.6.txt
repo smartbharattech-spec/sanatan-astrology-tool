@@ -1,0 +1,42 @@
+KP Local Testing Tool v1.6 - Validated against reference software
+====================================================================
+Validated chart used: 24/1/1995, 06:45, Alwar, Rajasthan ("sonu rajat" chart)
+
+FIXED in this version:
+1. Sequence tab bug: "Star of Sub" now correctly means the Star Lord OF the
+   Sub Lord planet (was incorrectly using the sub-sub-division instead).
+2. Vedic Aspect bug: every planet now gets its default 7th-house aspect
+   (previously only Mars/Jupiter/Saturn's special aspects were checked).
+   Rahu/Ketu excluded as aspectors (nodes don't cast classical drishti).
+3. Aspect Hit list: removed duplicate reverse-direction pairs (A->B and
+   B->A were both being listed for the same hit).
+
+VALIDATION RESULTS (vs reference software screenshots):
+- Planets (sign/degree/nakshatra/star lord/retrograde): 9/9 EXACT MATCH
+- Sequence tab (Planet/StarLord/SubLord/StarOfSub/Combined houses): 45/45 EXACT MATCH
+- KP Cusps: 12/12 signs match, 11/12 sub lords match, ~4 arcmin precision
+  offset on Ascendant/cusp degrees causes occasional Sub-Sub Lord flips near
+  boundaries (houses 1,7,8,12 in the test chart)
+- Aspects (Hit system): 6-7/7 pairs match on formula+ranges exactly, but
+  2-3 extra Rahu-involving pairs appear in our output that don't appear in
+  reference (and vice versa in a different test chart) - exact inclusion/
+  exclusion rule for Rahu in Planet-to-Planet hits still unconfirmed,
+  needs another test chart to pin down.
+
+NOT yet cross-validated against reference (implemented but unverified):
+- Dasha (Mahadasha/Antardasha/Pratyantardasha) - dates computed via
+  standard Vimshottari formula, logic looks correct but not screenshot-matched yet
+- Panchang (Tithi/Yoga/Karan/Sunrise/Sunset)
+- Ruling Planets, Transit Comparison (not yet wired to API endpoint)
+
+STILL PENDING (next phase):
+- API endpoints for ruling_planets() / transit_comparison()
+- Frontend UI (tabs, Lagna/KP chart diagrams)
+
+--- HOTFIX (same v1.6 zip, updated) ---
+Fixed: "too many values to unpack (expected 2)" error when running on Windows
+with the `pysweph` package from requirements.txt. Its swe.calc_ut() and
+swe.houses_ex() return tuples of a different length than pyswisseph does.
+Now unpacks robustly (res[0]) instead of assuming exactly 2 return values.
+Verified against the "Jaisalmer Test" chart (27/10/1982, 20:45) - Ascendant
+Taurus 25°01'54" matches the original reference screenshot exactly.
